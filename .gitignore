@@ -36,3 +36,8 @@ dist
 *.out
 *.app
 tests
+admin-keygen
+
+# Configuration files
+private-key.txt
+public-key.txt
