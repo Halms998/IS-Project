@@ -36,6 +36,7 @@ dist
 *.out
 *.app
 tests
+cast-vote
 admin-keygen
 
 # Configuration files
