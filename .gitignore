@@ -42,3 +42,7 @@ admin-keygen
 # Configuration files
 private-key.txt
 public-key.txt
+
+tokens.txt
+votes-downloaded.txt
+admin-tokens
