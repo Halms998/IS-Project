@@ -46,3 +46,6 @@ public-key.txt
 tokens.txt
 votes-downloaded.txt
 admin-tokens
+
+tally-votes
+votes.txt

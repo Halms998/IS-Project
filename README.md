@@ -75,7 +75,7 @@ implementation. They need GMP, Crypto++ and
 | `admin-keygen` | Create the election and Paillier key pair | Done |
 | `admin-tokens` | Generate one unique voter token per voter into `tokens.txt` | Done |
 | `cast-vote` | Encrypt a ballot and produce its authenticity code (MAC) | Done |
-| `tally-votes` | Verify MACs, skip duplicate tokens, tally homomorphically, run integrity checks | To do |
+| `tally-votes` | Verify MACs, skip duplicate tokens, tally homomorphically, run integrity checks | Done |
 | `tests` | Check key generation, encryption, decryption and homomorphic addition | Done |
 
 Build and try it:

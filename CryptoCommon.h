@@ -19,3 +19,6 @@ void ciphertext_sha256(mpz_t& rop, paillier_ciphertext_t* ciphertext);
 // Removes hyphens from a voter token from stdin.
 // Returns false if non-numeric characters other than hyphens are found.
 bool sanitize_voter_token(std::string& str_voter_token);
+
+// Converts a base 64 string (as produced by ciphertext_base64) back into a ciphertext.
+paillier_ciphertext_t* base64_ciphertext(const std::string& encoded);

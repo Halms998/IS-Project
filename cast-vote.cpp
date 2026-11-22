@@ -83,7 +83,7 @@ int main(){
 	}while(confirmation != 'y' && confirmation != 'Y');
 	cout << '\n';
 	// The vote is stored as {number of voters}^{# of candidate - 1}.
-	paillier_plaintext_t* ptVote = paillier_plaintext_from_ui(numVoters);
+	paillier_plaintext_t* ptVote = paillier_plaintext_from_ui(numVoters + 1);
 	mpz_pow_ui(ptVote->m, ptVote->m, zCandidate - 1);
 	// cout << "Your vote is encoded (but not encrypted) as: ";
 	// mpz_out_str(stdout, 10, ptVote->m);
