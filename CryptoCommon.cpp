@@ -1,5 +1,4 @@
 #include "CryptoCommon.h"
-#define EXPORTED_CIPHERTEXT_SIZE_BYTES PAILLIER_BITS_TO_BYTES(KEY_LENGTH)
 using namespace std;
 using namespace CryptoPP;
 
@@ -9,7 +8,7 @@ string ciphertext_base64(paillier_ciphertext_t* ciphertext){
 	byte* ct_as_bytes = (byte*)mpz_export(NULL, &ct_as_bytes_length, 1, 1, 1, 0, ciphertext->c);
 	// Convert the bytes to base 64.
 	string encoded;
-	StringSource ss(ct_as_bytes, EXPORTED_CIPHERTEXT_SIZE_BYTES, true, new Base64Encoder(new StringSink(encoded)));
+	StringSource ss(ct_as_bytes, ct_as_bytes_length, true, new Base64Encoder(new StringSink(encoded)));
 	// Clean up.
 	free(ct_as_bytes);
 	return encoded;
@@ -51,4 +50,14 @@ bool sanitize_voter_token(string& str_voter_token){
 	// Clean up.
 	free(temp);
 	return true;
+}
+
+paillier_ciphertext_t* base64_ciphertext(const string& encoded){
+	// Convert the base 64 string back to a string of bytes. Line breaks are ignored.
+	string decoded;
+	StringSource ss(encoded, true, new Base64Decoder(new StringSink(decoded)));
+	// Import these bytes into a new ciphertext.
+	paillier_ciphertext_t* ciphertext = paillier_create_enc_zero();
+	mpz_import(ciphertext->c, decoded.length(), 1, 1, 1, 0, decoded.c_str());
+	return ciphertext;
 }
