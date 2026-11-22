@@ -35,9 +35,9 @@ dist
 *.exe
 *.out
 *.app
-tests
-cast-vote
-admin-keygen
+/tests
+/cast-vote
+/admin-keygen
 
 # Configuration files
 private-key.txt
@@ -45,7 +45,7 @@ public-key.txt
 
 tokens.txt
 votes-downloaded.txt
-admin-tokens
+/admin-tokens
 
-tally-votes
+/tally-votes
 votes.txt

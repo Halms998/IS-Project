@@ -78,6 +78,16 @@ implementation. They need GMP, Crypto++ and
 | `tally-votes` | Verify MACs, skip duplicate tokens, tally homomorphically, run integrity checks | Done |
 | `tests` | Check key generation, encryption, decryption and homomorphic addition | Done |
 
+## Work in progress
+
+| Area | Owner | Status |
+| --- | --- | --- |
+| C++ crypto core (`admin-keygen`, `cast-vote`, Paillier tests) | noor486 | Done |
+| `admin-tokens`, `tally-votes`, ciphertext and vote-radix fixes | Esar Fatima | Done, merged to `main` |
+| Backend API (`server/`) | Esar Fatima | On branch `feature/backend-api`, pull request open; end-to-end run with the compiled C++ tools being verified |
+| Connect the React UI to the API (replace seeded data in `src/App.tsx`) | Esar Fatima | Next |
+| Viva script, threat model, test evidence | To be assigned | Not started |
+
 Build and try it:
 
 ```bash
@@ -111,6 +121,12 @@ election secrets or data and are ignored by Git. Never commit them.
    Then rebuild and reinstall libpaillier, delete the old `.exe` files and run
    `mingw32-make` again. Linux and WSL do not need this patch.
 
+## Backend API
+
+The `server/` folder is a Node + SQLite API that stores elections, tokens, encrypted ballots and
+an audit log, and runs the C++ tools above for all cryptography. See
+[`server/README.md`](./server/README.md) for setup, configuration and the API reference.
+
 ## Contributions
 
 ### Esaar Fatima
@@ -124,6 +140,9 @@ election secrets or data and are ignored by Git. Never commit them.
   `tokens.txt` and `votes-downloaded.txt`.
 - Worked out and documented the Windows (MSYS2) build, including the
   libpaillier random-number fix above.
+- Built the **backend API** in `server/`: elections, hashed voter tokens, ciphertext-only
+  ballot storage, an audit log, explicit rejection of unknown, reused and malformed ballots,
+  admin-key protected routes, and a runner that calls the C++ tools, with automated tests.
 - Updated this README.
 
 See `git log` for the full history of every contributor.
