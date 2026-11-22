@@ -78,6 +78,16 @@ implementation. They need GMP, Crypto++ and
 | `tally-votes` | Verify MACs, skip duplicate tokens, tally homomorphically, run integrity checks | Done |
 | `tests` | Check key generation, encryption, decryption and homomorphic addition | Done |
 
+## Work in progress
+
+| Area | Owner | Status |
+| --- | --- | --- |
+| C++ crypto core (`admin-keygen`, `cast-vote`, Paillier tests) | noor486 | Done |
+| `admin-tokens`, `tally-votes`, ciphertext and vote-radix fixes | Esar Fatima | Done, merged to `main` |
+| Backend API (`server/`) | Esar Fatima | On branch `feature/backend-api`, pull request open; end-to-end run with the compiled C++ tools being verified |
+| Connect the React UI to the API (replace seeded data in `src/App.tsx`) | Esar Fatima | Next |
+| Viva script, threat model, test evidence | To be assigned | Not started |
+
 Build and try it:
 
 ```bash
