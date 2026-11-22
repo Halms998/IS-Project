@@ -111,6 +111,12 @@ election secrets or data and are ignored by Git. Never commit them.
    Then rebuild and reinstall libpaillier, delete the old `.exe` files and run
    `mingw32-make` again. Linux and WSL do not need this patch.
 
+## Backend API
+
+The `server/` folder is a Node + SQLite API that stores elections, tokens, encrypted ballots and
+an audit log, and runs the C++ tools above for all cryptography. See
+[`server/README.md`](./server/README.md) for setup, configuration and the API reference.
+
 ## Contributions
 
 ### Esaar Fatima
@@ -124,6 +130,9 @@ election secrets or data and are ignored by Git. Never commit them.
   `tokens.txt` and `votes-downloaded.txt`.
 - Worked out and documented the Windows (MSYS2) build, including the
   libpaillier random-number fix above.
+- Built the **backend API** in `server/`: elections, hashed voter tokens, ciphertext-only
+  ballot storage, an audit log, explicit rejection of unknown, reused and malformed ballots,
+  admin-key protected routes, and a runner that calls the C++ tools, with automated tests.
 - Updated this README.
 
 See `git log` for the full history of every contributor.
