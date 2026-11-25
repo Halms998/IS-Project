@@ -1,3 +1,6 @@
+#include <cryptopp/cryptlib.h>
+#include <cryptopp/sha.h>
+#include <cryptopp/base64.h>
 #include "CryptoCommon.h"
 using namespace std;
 using namespace CryptoPP;

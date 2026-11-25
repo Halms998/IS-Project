@@ -1,7 +1,6 @@
+#ifndef CRYPTO_COMMON_H
+#define CRYPTO_COMMON_H
 #include <string>
-#include <cryptopp/cryptlib.h>
-#include <cryptopp/sha.h>
-#include <cryptopp/base64.h>
 #include <gmp.h>
 #include "paillier.h"
 #define KEY_LENGTH 2048
@@ -22,3 +21,5 @@ bool sanitize_voter_token(std::string& str_voter_token);
 
 // Converts a base 64 string (as produced by ciphertext_base64) back into a ciphertext.
 paillier_ciphertext_t* base64_ciphertext(const std::string& encoded);
+
+#endif
