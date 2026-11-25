@@ -38,18 +38,14 @@ static string format_token(const mpz_t token){
 int main(){
 	cout << "This program will generate the voter ID tokens for the election." << endl;
 	// Read the number of voters from the public key file written by admin-keygen.
-	ifstream ifspub(KEY_FILE_PUBLIC);
-	if(!ifspub){
+	// Only the numbers are needed here, so the key itself is not parsed.
+	int numCandidates, numVoters;
+	int pubkeyStatus = read_pubkey_from_file(numCandidates, numVoters, NULL);
+	if(pubkeyStatus == PUBKEY_NO_FILE){
 		cerr << "Error: could not read public key file. Run admin-keygen first.\n";
 		return 1;
 	}
-	string pubHex;
-	int numCandidates, numVoters;
-	getline(ifspub, pubHex);
-	ifspub >> numCandidates;
-	ifspub >> numVoters;
-	ifspub.close();
-	if(numCandidates < 2 || numVoters < 2){
+	if(pubkeyStatus != PUBKEY_OK){
 		cerr << "The numbers of candidates and of voters are corrupt.\n";
 		return 2;
 	}

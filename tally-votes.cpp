@@ -15,26 +15,6 @@ using namespace std;
 #define TALLY_NO_TOKENS 3
 #define TALLY_UNTRUSTED 4
 
-static bool load_public_key(int& numCandidates, int& numVoters, paillier_pubkey_t*& pub){
-	ifstream ifs(KEY_FILE_PUBLIC);
-	if(!ifs){
-		return false;
-	}
-	string hex;
-	getline(ifs, hex);
-	ifs >> numCandidates >> numVoters;
-	if(!ifs || numCandidates < 2 || numVoters < 2){
-		return false;
-	}
-	if(!hex.empty() && hex.back() == '\r'){
-		hex.pop_back();
-	}
-	vector<char> buffer(hex.begin(), hex.end());
-	buffer.push_back('\0');
-	pub = paillier_pubkey_from_hex(buffer.data());
-	return pub != NULL;
-}
-
 static bool load_private_key(paillier_pubkey_t* pub, paillier_prvkey_t*& prv){
 	ifstream ifs(KEY_FILE_PRIVATE);
 	if(!ifs){
@@ -156,7 +136,7 @@ static void process_envelope(Tally& tally, const string& ballotText, const strin
 int main(){
 	Tally tally;
 	int numCandidates, numVoters;
-	if(!load_public_key(numCandidates, numVoters, tally.pub)){
+	if(read_pubkey_from_file(numCandidates, numVoters, &tally.pub) != PUBKEY_OK){
 		cerr << "The public key file is missing or corrupt.\n";
 		return TALLY_NO_PUBLIC_KEY;
 	}

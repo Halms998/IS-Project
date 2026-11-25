@@ -9,6 +9,16 @@
 #define KEY_FILE_PUBLIC "public-key.txt"
 #define KEY_FILE_PRIVATE "private-key.txt"
 
+// Results of read_pubkey_from_file.
+#define PUBKEY_OK 0
+#define PUBKEY_NO_FILE 1
+#define PUBKEY_CORRUPT 2
+
+// Reads the public key file written by admin-keygen: the key on the first line, then the
+// numbers of candidates and of voters. If pub is NULL, only the two numbers are read.
+// Returns PUBKEY_OK, PUBKEY_NO_FILE or PUBKEY_CORRUPT.
+int read_pubkey_from_file(int& numCandidates, int& numVoters, paillier_pubkey_t** pub);
+
 // Converts a ciphertext into a base 64 string.
 std::string ciphertext_base64(paillier_ciphertext_t* ciphertext);
 

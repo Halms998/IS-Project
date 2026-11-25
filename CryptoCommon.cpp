@@ -1,9 +1,41 @@
+#include <fstream>
+#include <vector>
 #include <cryptopp/cryptlib.h>
 #include <cryptopp/sha.h>
 #include <cryptopp/base64.h>
 #include "CryptoCommon.h"
 using namespace std;
 using namespace CryptoPP;
+
+int read_pubkey_from_file(int& numCandidates, int& numVoters, paillier_pubkey_t** pub){
+	ifstream ifs(KEY_FILE_PUBLIC);
+	if(!ifs){
+		return PUBKEY_NO_FILE;
+	}
+	string hex;
+	getline(ifs, hex);
+	ifs >> numCandidates >> numVoters;
+	if(!ifs || numCandidates < 2 || numVoters < 2){
+		return PUBKEY_CORRUPT;
+	}
+	// Tolerate a file that was saved with Windows line endings.
+	if(!hex.empty() && hex.back() == '\r'){
+		hex.pop_back();
+	}
+	if(pub != NULL){
+		if(hex.empty()){
+			return PUBKEY_CORRUPT;
+		}
+		// paillier_pubkey_from_hex takes a non-const C string.
+		vector<char> buffer(hex.begin(), hex.end());
+		buffer.push_back('\0');
+		*pub = paillier_pubkey_from_hex(buffer.data());
+		if(*pub == NULL){
+			return PUBKEY_CORRUPT;
+		}
+	}
+	return PUBKEY_OK;
+}
 
 string ciphertext_base64(paillier_ciphertext_t* ciphertext){
 	// Export the ciphertext to bytes.

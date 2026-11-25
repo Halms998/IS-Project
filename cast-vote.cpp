@@ -18,22 +18,17 @@ int main(){
 	// cout << "It works!" << endl;
 	cout << "Welcome! ";
 	// Read the public key from a file.
-	ifstream ifspub(KEY_FILE_PUBLIC);
-	if(!ifspub){
+	int numCandidates, numVoters;
+	paillier_pubkey_t* pub = NULL;
+	int pubkeyStatus = read_pubkey_from_file(numCandidates, numVoters, &pub);
+	if(pubkeyStatus == PUBKEY_NO_FILE){
 		cerr << "Error: could not read public key file.\n";
 		return 1;
 	}
-	char pubHex[KEY_LENGTH_HEX + 1];
-	int numCandidates, numVoters;
-	ifspub.getline(pubHex, KEY_LENGTH_HEX + 1);
-	ifspub >> numCandidates;
-	ifspub >> numVoters;
-	ifspub.close();
-	if(numCandidates < 2 || numVoters < 2){
+	if(pubkeyStatus != PUBKEY_OK){
 		cerr << "The numbers of candidates and of voters are corrupt.\n";
 		return 2;
 	}
-	paillier_pubkey_t* pub = paillier_pubkey_from_hex(pubHex);
 	// Prompt the user for the voter token. The token should be represented as a base 10 number.
 	// There may be dashes every few digits to make it easier for the user to enter, but they
 	// will be removed from the string here.
