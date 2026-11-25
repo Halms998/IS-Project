@@ -1,8 +1,10 @@
+#include <cstring>
 #include <fstream>
 #include <limits>
 #include <vector>
 #include <cryptopp/cryptlib.h>
 #include <cryptopp/sha.h>
+#include <cryptopp/hmac.h>
 #include <cryptopp/base64.h>
 #include "CryptoCommon.h"
 using namespace std;
@@ -81,6 +83,26 @@ void ciphertext_sha256(mpz_t& rop, paillier_ciphertext_t* ciphertext){
 	// Put the digest into an GMP integer.
 	mpz_init(rop);
 	mpz_import(rop, SHA256::DIGESTSIZE, 1, 1, 1, 0, digest);
+	// Clean up.
+	free(ct_as_bytes);
+}
+
+void ciphertext_hmac_sha256(mpz_t& rop, paillier_ciphertext_t* ciphertext, const mpz_t token){
+	// The key is the token in base 10 without hyphens or leading zeros, so cast-vote and
+	// tally-votes always derive the same key from the same token.
+	vector<char> key(mpz_sizeinbase(token, 10) + 2);
+	mpz_get_str(key.data(), 10, token);
+	size_t key_length = strlen(key.data());
+	// Export the ciphertext to bytes.
+	size_t ct_as_bytes_length;
+	byte* ct_as_bytes = (byte*)mpz_export(NULL, &ct_as_bytes_length, 1, 1, 1, 0, ciphertext->c);
+	// Calculate the HMAC-SHA256.
+	byte digest[HMAC<SHA256>::DIGESTSIZE];
+	HMAC<SHA256> hmac((const byte*)key.data(), key_length);
+	hmac.CalculateDigest(digest, ct_as_bytes, ct_as_bytes_length);
+	// Put the digest into a GMP integer.
+	mpz_init(rop);
+	mpz_import(rop, HMAC<SHA256>::DIGESTSIZE, 1, 1, 1, 0, digest);
 	// Clean up.
 	free(ct_as_bytes);
 }

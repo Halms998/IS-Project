@@ -94,10 +94,11 @@ int main(){
 	// cout << '\n' << endl;
 	// Encrypt the vote.
 	paillier_ciphertext_t* ctVote = paillier_enc(NULL, pub, ptVote, paillier_get_rand_devurandom);
-	// Get the SHA-256 sum of the ciphertext.
+	// Get the HMAC-SHA256 of the ciphertext, keyed with the voter token. A plain SHA-256 sum
+	// would let anyone who swaps the ballot adjust the encrypted value below to match.
 	mpz_t checksum;
-	ciphertext_sha256(checksum, ctVote);
-	// Create an authenticity value, which is the voter token bitshifted 256 bits to the left + the SHA-256 sum.
+	ciphertext_hmac_sha256(checksum, ctVote, zVoterToken);
+	// Create an authenticity value, which is the voter token bitshifted 256 bits to the left + the HMAC.
 	paillier_plaintext_t* ptAuthentic = paillier_plaintext_from_ui(0);
 	mpz_mul_2exp(ptAuthentic->m, zVoterToken, 256);
 	mpz_add(ptAuthentic->m, ptAuthentic->m, checksum);

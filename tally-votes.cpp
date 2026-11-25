@@ -107,7 +107,8 @@ static void process_envelope(Tally& tally, const string& ballotText, const strin
 		mpz_init(tokenFromVoter);
 		mpz_tdiv_r_2exp(hashFromVoter, ptAuthentic->m, 256);
 		mpz_tdiv_q_2exp(tokenFromVoter, ptAuthentic->m, 256);
-		ciphertext_sha256(hashRedone, ctVote);
+		// Recompute the HMAC with the token found inside the authenticity value.
+		ciphertext_hmac_sha256(hashRedone, ctVote, tokenFromVoter);
 		if(mpz_cmp(hashFromVoter, hashRedone) != 0){
 			cerr << "Rejected: envelope " << envelopeNumber << ": the checksum is incorrect, so the ballot was modified\n";
 			++tally.rejected;

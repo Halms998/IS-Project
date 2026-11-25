@@ -33,6 +33,11 @@ std::string ciphertext_base64(paillier_ciphertext_t* ciphertext);
 // Sets rop to a GMP integer of the SHA-256 digest of a ciphertext.
 void ciphertext_sha256(mpz_t& rop, paillier_ciphertext_t* ciphertext);
 
+// Sets rop to a GMP integer of the HMAC-SHA256 of a ciphertext, keyed with the voter token
+// (its decimal digits). Unlike a plain SHA-256 digest, nobody can compute it for a modified
+// ballot without knowing the token, so the encrypted authenticity value cannot be adjusted.
+void ciphertext_hmac_sha256(mpz_t& rop, paillier_ciphertext_t* ciphertext, const mpz_t token);
+
 // Removes hyphens from a voter token from stdin.
 // Returns false if non-numeric characters other than hyphens are found.
 bool sanitize_voter_token(std::string& str_voter_token);
