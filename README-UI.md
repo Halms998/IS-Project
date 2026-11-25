@@ -25,14 +25,9 @@ The original page at `/` is untouched. This UI lives on its own entry page, `ui.
 
 ### Production build (optional)
 
-`npm run dev` needs no config. To include `ui.html` in `npm run build`, add it to
-`vite.config.ts`:
-
-```ts
-build: { rollupOptions: { input: { main: 'index.html', ui: 'ui.html' } } }
-```
-
-Then `npm run build && npm run preview` and open `/ui.html`.
+`vite.config.ts` lists both `index.html` and `ui.html` as entry pages, so
+`npm run build` includes this UI. Run `npm run build && npm run preview` and open
+`/ui.html`.
 
 ---
 
