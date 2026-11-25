@@ -150,5 +150,5 @@ the C++ tools themselves, as described in the main README.
 
 ## What is next
 
-Phase 4: replace the seeded data in `src/App.tsx` with calls to this API (a Vite dev proxy to
+Phase 4: replace the seeded data in `frontend/App.tsx` (in the repository root) with calls to this API (a Vite dev proxy to
 `http://localhost:3001` is the simplest way).
