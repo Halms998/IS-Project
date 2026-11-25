@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { Config } from '../config/env';
 import { CryptoError, CryptoRunner, Envelope, TallyResult } from '../types';
-
+import { validateEnvelope, validateEnvelopes } from './cryptoValidation';
 // ---------------------------------------------------------------------------
 // Parsing. These are pure functions so they can be tested against real program output.
 // ---------------------------------------------------------------------------
@@ -27,16 +27,19 @@ export function parseCastVoteOutput(stdout: string): Envelope {
   if (!ballot || !mac) {
     throw new CryptoError('cast-vote did not print a valid ballot and MAC.');
   }
-  return { ballot, mac };
+  return validateEnvelope({ ballot, mac });
 }
 
 // Formats envelopes the way tally-votes expects them on standard input.
 export function formatEnvelopes(envelopes: Envelope[]): string {
-  return (
-    envelopes
-      .map((e) => `---BEGIN:BALLOT---\n${e.ballot}\n----END:BALLOT----\n---BEGIN:MAC---\n${e.mac}\n----END:MAC----\n`)
-      .join('') || ''
-  );
+  const validatedEnvelopes = validateEnvelopes(envelopes);
+
+  return validatedEnvelopes
+    .map(
+      (e) =>
+        `---BEGIN:BALLOT---\n${e.ballot}\n----END:BALLOT----\n---BEGIN:MAC---\n${e.mac}\n----END:MAC----\n`
+    )
+    .join('');
 }
 
 function readNumber(text: string, label: string): number | null {
