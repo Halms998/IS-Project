@@ -1,0 +1,20 @@
+# Let Git decide which files are text and normalize them to LF in the repository.
+* text=auto
+
+# Files that are built or run on Linux/WSL and MSYS2 must always have LF line endings,
+# even in a Windows checkout. CRLF breaks shell recipes in the Makefile and the
+# "#!/usr/bin/env python3" line of the Python script.
+*.cpp     text eol=lf
+*.h       text eol=lf
+Makefile  text eol=lf
+*.py      text eol=lf
+*.sh      text eol=lf
+
+# Binary files: never change them.
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.pdf     binary
+*.db      binary
