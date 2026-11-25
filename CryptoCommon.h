@@ -14,10 +14,18 @@
 #define PUBKEY_NO_FILE 1
 #define PUBKEY_CORRUPT 2
 
+// Used when the administrator does not give the election a name.
+#define DEFAULT_ELECTION_NAME "Election"
+
 // Reads the public key file written by admin-keygen: the key on the first line, then the
 // numbers of candidates and of voters. If pub is NULL, only the two numbers are read.
 // Returns PUBKEY_OK, PUBKEY_NO_FILE or PUBKEY_CORRUPT.
 int read_pubkey_from_file(int& numCandidates, int& numVoters, paillier_pubkey_t** pub);
+
+// Same as above, but also reads the election name and the e-mail address for votes.
+// Files from before these lines were added give the default name and an empty address.
+int read_pubkey_from_file(int& numCandidates, int& numVoters, paillier_pubkey_t** pub,
+	std::string& electionName, std::string& electionEmailAddress);
 
 // Converts a ciphertext into a base 64 string.
 std::string ciphertext_base64(paillier_ciphertext_t* ciphertext);

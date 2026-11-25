@@ -1,4 +1,5 @@
 #include <fstream>
+#include <limits>
 #include <vector>
 #include <cryptopp/cryptlib.h>
 #include <cryptopp/sha.h>
@@ -7,7 +8,20 @@
 using namespace std;
 using namespace CryptoPP;
 
+// Removes a trailing carriage return left by a file saved with Windows line endings.
+static void strip_cr(string& line){
+	if(!line.empty() && line.back() == '\r'){
+		line.pop_back();
+	}
+}
+
 int read_pubkey_from_file(int& numCandidates, int& numVoters, paillier_pubkey_t** pub){
+	string electionName, electionEmailAddress;
+	return read_pubkey_from_file(numCandidates, numVoters, pub, electionName, electionEmailAddress);
+}
+
+int read_pubkey_from_file(int& numCandidates, int& numVoters, paillier_pubkey_t** pub,
+	string& electionName, string& electionEmailAddress){
 	ifstream ifs(KEY_FILE_PUBLIC);
 	if(!ifs){
 		return PUBKEY_NO_FILE;
@@ -18,9 +32,17 @@ int read_pubkey_from_file(int& numCandidates, int& numVoters, paillier_pubkey_t*
 	if(!ifs || numCandidates < 2 || numVoters < 2){
 		return PUBKEY_CORRUPT;
 	}
-	// Tolerate a file that was saved with Windows line endings.
-	if(!hex.empty() && hex.back() == '\r'){
-		hex.pop_back();
+	strip_cr(hex);
+	// Lines 4 and 5 are optional.
+	ifs.ignore(numeric_limits<streamsize>::max(), '\n');
+	electionName.clear();
+	electionEmailAddress.clear();
+	getline(ifs, electionName);
+	getline(ifs, electionEmailAddress);
+	strip_cr(electionName);
+	strip_cr(electionEmailAddress);
+	if(electionName.empty()){
+		electionName = DEFAULT_ELECTION_NAME;
 	}
 	if(pub != NULL){
 		if(hex.empty()){

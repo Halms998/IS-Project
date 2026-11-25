@@ -1,5 +1,7 @@
 #include <fstream>
 #include <iostream>
+#include <limits>
+#include <string>
 #include "CryptoCommon.h"
 using namespace std;
 
@@ -30,6 +32,19 @@ int main(){
 		cerr << "There must be at least two candidates and at least two voters.\n";
 		return 1;
 	}
+	// These questions come after the numbers so that scripts that only send the two numbers
+	// still work. Blank answers are allowed.
+	string electionName, electionEmailAddress;
+	cin.ignore(numeric_limits<streamsize>::max(), '\n');
+	cout << "Enter a name for this election: ";
+	cout.flush();
+	getline(cin, electionName);
+	if(electionName.empty()){
+		electionName = DEFAULT_ELECTION_NAME;
+	}
+	cout << "What e-mail address will you be monitoring for incoming votes? ";
+	cout.flush();
+	getline(cin, electionEmailAddress);
 	// Generate a Paillier public/private key pair.
 	cout << "Generating Paillier key pair with " << KEY_LENGTH << " bits..." << endl;
 	paillier_pubkey_t* pub;
@@ -44,8 +59,15 @@ int main(){
 	// Save the public key along with the numbers of candidates and voters to a file.
 	ofstream ofspub(KEY_FILE_PUBLIC);
 	if(ofspub){
+		// The public key file is given to voters along with cast-vote. Its format is:
+		// Line 1: the public key as exported by paillier_pubkey_to_hex
+		// Line 2: the number of candidates
+		// Line 3: the number of voters
+		// Line 4: the name of the election
+		// Line 5: the e-mail address to which encrypted votes should be sent (may be blank)
 		ofspub << paillier_pubkey_to_hex(pub) << endl;
-		ofspub << numCandidates << '\n' << numVoters << endl;
+		ofspub << numCandidates << '\n' << numVoters << '\n'
+			<< electionName << '\n' << electionEmailAddress << endl;
 		ofspub.close();
 	}else{
 		cerr << "Warning: could not write file for public key.\n";
@@ -61,6 +83,6 @@ int main(){
 	// Clean up.
 	paillier_freepubkey(pub);
 	paillier_freeprvkey(prv);
-	cout << "This process has completed." << endl;
+	cout << "This process has completed. Send " << KEY_FILE_PUBLIC << " and cast-vote to the voters." << endl;
 	return 0;
 }
