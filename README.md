@@ -121,6 +121,82 @@ election secrets or data and are ignored by Git. Never commit them.
    Then rebuild and reinstall libpaillier, delete the old `.exe` files and run
    `mingw32-make` again. Linux and WSL do not need this patch.
 
+## Election integrity and confidentiality
+
+In a real election, people are motivated to change the result. Even voters with
+genuine tokens may try to vote twice or vote for more than one candidate. This
+section lists the attacks the C++ tools defend against, how, and what is still
+out of scope.
+
+**How a ballot is built.** `cast-vote` encodes a vote for candidate *k* as
+`(voters + 1)^(k - 1)`, so each candidate gets its own "digit" in base
+`voters + 1`. It encrypts that number with the 2048-bit Paillier public key.
+It then encrypts an authenticity value, `token × 2^256 + SHA-256(ballot ciphertext)`,
+with the same key. The two ciphertexts, BALLOT and MAC, form one envelope.
+
+### Seeing other people's votes
+- Ballots are encrypted with a 2048-bit Paillier key. Only the election
+  administrator holds `private-key.txt`.
+- Paillier encryption is randomized, so two votes for the same candidate give
+  completely different ciphertexts. Comparing envelopes reveals nothing.
+- `tally-votes` multiplies all accepted ballot ciphertexts together, which adds
+  the plaintexts (additive homomorphism), and decrypts **only the total**. No
+  individual ballot is ever decrypted.
+- The voter token travels inside the encrypted MAC, so someone reading the
+  e-mail cannot learn it. Sending through an SMTP server with STARTTLS adds
+  transport encryption on top.
+
+### Voting without permission
+- `admin-tokens` creates one unique, random 128-bit token per voter from the
+  operating system's secure random source. A token cannot realistically be guessed.
+- `tally-votes` decrypts each MAC, takes the token out of it and rejects the
+  envelope if that token is not in `tokens.txt` ("the token was never issued").
+
+### Voting more than once
+- When two envelopes carry the same token, only the first is counted and the
+  rest are rejected ("this token has already been used"). Accidentally sending
+  the same e-mail twice is therefore harmless.
+- If more ballots are accepted than the number of voters the election was set
+  up for, the results are marked as untrustworthy.
+
+### Modifying a ballot in transit
+- `tally-votes` recomputes the SHA-256 checksum of each ballot ciphertext and
+  compares it with the checksum inside the decrypted MAC. A changed ballot is
+  rejected ("the checksum is incorrect").
+
+### Ballots with more than one vote, or votes for unknown candidates
+Paillier lets a voter encrypt any number, not just a valid vote. After the tally:
+- The votes found must equal the number of ballots counted. A ballot worth two
+  votes, or one vote for each of two candidates, breaks this equality, and the
+  results are marked as untrustworthy.
+- The total must be smaller than `(voters + 1)^candidates`. A larger total means
+  a vote for a candidate that does not exist.
+- `admin-keygen` refuses to create an election where `(voters + 1)^candidates`
+  does not fit under the public key. Otherwise the total could wrap around the
+  modulus and give wrong counts without any warning.
+
+When any of these checks fails, `tally-votes` prints a warning and exits with
+code 4, so the backend can show that the results cannot be trusted.
+
+### Known limitations
+These are honest gaps, worth knowing for a viva:
+- **The MAC can be adjusted homomorphically.** The MAC is encrypted with the
+  public key, and the checksum of any ciphertext is public. An attacker who
+  replaces a ballot can multiply the MAC by `E(new checksum - old checksum)`, and
+  the forged envelope passes the checksum check with the original token. A real
+  fix would be a signature, or an HMAC keyed with a secret the attacker does not
+  know, instead of an encrypted checksum.
+- **Colluding voters can hide invalid ballots.** One voter casting two votes
+  while another casts an encryption of 0 keeps "votes found = ballots counted".
+  The reference project adds a reverse ballot for extra checking. The complete
+  solution is a zero-knowledge proof that each ballot encrypts exactly one valid
+  vote.
+- **The administrator is trusted.** Whoever holds the private key and
+  `tokens.txt` could decrypt single ballots or link tokens to voters. Splitting
+  the key between several trustees (threshold decryption) would remove this.
+- **Secrets are plain files.** `private-key.txt` and `tokens.txt` are stored
+  unencrypted. They are ignored by Git and must never be committed or shared.
+
 ## Backend API
 
 The `server/` folder is a Node + SQLite API that stores elections, tokens, encrypted ballots and
