@@ -182,9 +182,16 @@ with the same key. The two ciphertexts, BALLOT and MAC, form one envelope.
   up for, the results are marked as untrustworthy.
 
 ### Modifying a ballot in transit
-- `tally-votes` recomputes the SHA-256 checksum of each ballot ciphertext and
-  compares it with the checksum inside the decrypted MAC. A changed ballot is
-  rejected ("the checksum is incorrect").
+- Each envelope carries an encrypted authenticity value,
+  `token × 2^256 + HMAC(token, ballot ciphertext)`. `tally-votes` decrypts it,
+  takes out the token, recomputes the HMAC-SHA256 of the ballot with that token
+  as the key, and rejects the envelope if it does not match ("the checksum is
+  incorrect").
+- The HMAC is keyed with the voter's secret token. An attacker who intercepts an
+  envelope sees only ciphertext and cannot compute a valid HMAC for a replaced
+  ballot, so the ballot cannot be swapped without the token. `forge-ballot.py`
+  demonstrates this: the same forgery that succeeds against a plain checksum is
+  rejected here.
 
 ### Ballots with more than one vote, or votes for unknown candidates
 Paillier lets a voter encrypt any number, not just a valid vote. After the tally:
@@ -200,14 +207,22 @@ Paillier lets a voter encrypt any number, not just a valid vote. After the tally
 When any of these checks fails, `tally-votes` prints a warning and exits with
 code 4, so the backend can show that the results cannot be trusted.
 
+### A fixed weakness: homomorphic MAC forgery
+The reference design put a plain `SHA-256(ballot)` inside the MAC. Because that
+checksum is public and the MAC is encrypted with the public key, an attacker who
+replaced a ballot could multiply the MAC by `E(new checksum - old checksum)`; the
+forged envelope then passed the checksum check with the victim's token, and the
+attacker's vote was counted. `forge-ballot.py` carries out exactly this attack
+using only `public-key.txt` and an intercepted envelope.
+
+This project replaces the checksum with an **HMAC-SHA256 keyed by the voter
+token** (see `ciphertext_hmac_sha256` in `CryptoCommon.cpp`). The attacker no
+longer knows the key, cannot compute the HMAC of a replaced ballot, and the
+forged envelope is rejected. Run `forge-ballot.py` against the current build to
+see the rejection, and against commit `cfb8222` to see the attack succeed.
+
 ### Known limitations
 These are honest gaps, worth knowing for a viva:
-- **The MAC can be adjusted homomorphically.** The MAC is encrypted with the
-  public key, and the checksum of any ciphertext is public. An attacker who
-  replaces a ballot can multiply the MAC by `E(new checksum - old checksum)`, and
-  the forged envelope passes the checksum check with the original token. A real
-  fix would be a signature, or an HMAC keyed with a secret the attacker does not
-  know, instead of an encrypted checksum.
 - **Colluding voters can hide invalid ballots.** One voter casting two votes
   while another casts an encryption of 0 keeps "votes found = ballots counted".
   The reference project adds a reverse ballot for extra checking. The complete
