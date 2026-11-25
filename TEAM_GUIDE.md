@@ -19,7 +19,7 @@ and has four parts:
    all cryptography. See `server/README.md`.
 3. **Interactive UI** (`ui.html`): real Paillier encryption in the browser, for
    a self-contained demo. See `README-UI.md`.
-4. **Original demo UI** (`index.html`, `src/App.tsx`): overview, cast-a-ballot
+4. **Original demo UI** (`index.html`, `frontend/App.tsx`): overview, cast-a-ballot
    and integrity screens with seeded data. It is not yet connected to the API.
 
 None of this is a production voting system. Never present it as one.
@@ -48,17 +48,18 @@ in `dist/`. Do not commit `node_modules/` or `dist/`; they are ignored.
 ## 3. Important files
 
 ```text
-src/App.tsx       Main screens and local demo state
-src/styles.css    Dashboard layout, components, and responsive styles
-src/main.tsx      React entry point
-index.html        Browser entry point and page metadata
+frontend/App.tsx      Main screens and local demo state
+frontend/styles.css   Dashboard layout, components, and responsive styles
+frontend/main.tsx     React entry point
+frontend/ui/          Interactive Paillier UI (entry page ui.html)
+index.html            Browser entry point and page metadata
 package.json      Scripts and dependencies
 vite.config.ts    Vite configuration
 README.md         Project overview and high-level roadmap
 TEAM_GUIDE.md     This teammate handoff
 ```
 
-Keep UI changes in `src/`. Avoid adding backend, database, or cryptographic
+Keep UI changes in `frontend/` (the backend has its own `server/src/`). Avoid adding backend, database, or cryptographic
 logic directly into `App.tsx`; the next phase should extract those concerns
 behind typed services.
 

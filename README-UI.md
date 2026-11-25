@@ -121,7 +121,7 @@ cheating can only be detected in aggregate.
 
 ```
 ui.html                      entry page (served at /ui.html)
-src/ui/
+frontend/ui/
   main.tsx                   mounts the app
   SecureBallotApp.tsx        all screens and navigation
   election.ts                ElectionStore: setup, tokens, submit, tally, attacks

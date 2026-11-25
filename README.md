@@ -43,14 +43,20 @@ npm run preview
 
 ```text
 .
-├── index.html
+├── index.html            # Original demo UI entry page
+├── ui.html               # Interactive Paillier UI entry page
 ├── package.json
 ├── tsconfig*.json
 ├── vite.config.ts
-└── src
-    ├── App.tsx       # Demo screens and local interaction state
-    ├── main.tsx      # React entry point
-    └── styles.css    # Responsive dashboard styling
+├── frontend/             # React code for both pages
+│   ├── App.tsx           # Demo screens and local interaction state
+│   ├── main.tsx          # React entry point
+│   ├── styles.css        # Responsive dashboard styling
+│   ├── data/, types/     # Seed data and shared types
+│   └── ui/               # Interactive Paillier UI (see README-UI.md)
+├── server/               # Backend API (Node + SQLite), with its own server/src/
+├── *.cpp, *.h, Makefile  # C++ election tools
+└── imap-get-votes.py     # Downloads e-mailed votes
 ```
 
 ## Planned implementation phases
@@ -90,7 +96,7 @@ implementation. They need GMP, Crypto++ and
 | `admin-tokens`, `tally-votes`, ciphertext and vote-radix fixes | Esar Fatima | Done, merged to `main` |
 | Backend API (`server/`) with ballot validation | Esar Fatima | Merged to `main` (pull request #3); end-to-end run with the compiled C++ tools being verified |
 | Interactive in-browser Paillier UI (`ui.html`, see [README-UI](./README-UI.md)) | Haleemah Zaheer | Done, merged to `main` |
-| Connect the React UI to the API (replace seeded data in `src/App.tsx`) | Esar Fatima | Next |
+| Connect the React UI to the API (replace seeded data in `frontend/App.tsx`) | Esar Fatima | Next |
 | Viva script, test evidence | To be assigned | Not started |
 
 Build and try it:
@@ -224,7 +230,7 @@ an audit log, and runs the C++ tools above for all cryptography. See
 ### Esaar Fatima
 
 - Set up the initial backend structure and shared types/seed data
-  (`src/types`, `src/data`, `server/` skeleton) via pull request #1.
+  (`frontend/types`, `frontend/data`, `server/` skeleton) via pull request #1.
 - Added **`admin-tokens`**: generates one unique random 128-bit voter token per
   voter (39 digits, shown in hyphenated groups so they are easy to type) from
   the voter count in `public-key.txt`, and refuses to overwrite an existing
