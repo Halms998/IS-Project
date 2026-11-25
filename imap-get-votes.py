@@ -29,6 +29,19 @@ def election_name_from_public_key():
     return None
 
 
+def plain_text_part(message):
+    """Returns the first text/plain part of a message, or None.
+
+    E-mail programs often send a multipart message with both a plain text and an HTML
+    version of the body, sometimes nested inside another multipart part. walk() visits
+    every part, so nested ones are found too.
+    """
+    for part in message.walk():
+        if part.get_content_type().lower() == "text/plain":
+            return part
+    return None
+
+
 def main():
     print("This script will download encrypted votes from an IMAP mailbox.")
     if len(sys.argv) not in (3, 4):
@@ -60,9 +73,14 @@ def main():
                 # Decode the message.
                 message = email.message_from_bytes(data[0][1])
                 sender = message.get("From", "unknown party")
-                body = message.get_payload(decode=True)
+                # If the message is a multipart message, use the part in plain text.
+                part = plain_text_part(message)
+                if part is None:
+                    print("Skipping a message from ", sender, ": it has no text/plain part.", sep="")
+                    continue
+                body = part.get_payload(decode=True)
                 if body is None:
-                    print("Skipping a message from ", sender, ": it has no plain body.", sep="")
+                    print("Skipping a message from ", sender, ": its text/plain part is empty.", sep="")
                     continue
                 # Write the vote to the file. tally-votes ignores the "Vote from" line.
                 print("Saving vote from ", sender, "...", sep="")
