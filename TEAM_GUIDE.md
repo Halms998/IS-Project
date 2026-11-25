@@ -5,20 +5,24 @@ Read it before changing the demo.
 
 ## 1. What we have today
 
-The project is a React + TypeScript + Vite demonstration UI inspired by the
-[CS4783 Project 2 reference](https://github.com/wecsam/CS4783-Project-2).
-The current UI has three flows:
+The project is based on the
+[CS4783 Project 2 reference](https://github.com/wecsam/CS4783-Project-2)
+and has four parts:
 
-1. **Election overview**: shows a seeded election, live-looking tally cards,
-   protocol status, and encrypted ballot records.
-2. **Cast a ballot**: accepts a demo token, lets a user choose a candidate, and
-   updates local browser state.
-3. **Verify integrity**: displays the integrity checks that the final system
-   must perform.
+1. **C++ election tools** (repository root): `admin-keygen`, `admin-tokens`,
+   `cast-vote`, `tally-votes` and `imap-get-votes.py`. They perform the real
+   Paillier encryption, the homomorphic tally and the integrity checks. See the
+   README sections "Command-line election tools" and "Election integrity and
+   confidentiality".
+2. **Backend API** (`server/`): Node + SQLite. It stores elections, hashed
+   tokens, ciphertext-only ballots and an audit log, and runs the C++ tools for
+   all cryptography. See `server/README.md`.
+3. **Interactive UI** (`ui.html`): real Paillier encryption in the browser, for
+   a self-contained demo. See `README-UI.md`.
+4. **Original demo UI** (`index.html`, `src/App.tsx`): overview, cast-a-ballot
+   and integrity screens with seeded data. It is not yet connected to the API.
 
-The current version is intentionally a **frontend-only demo shell**. It does
-not yet perform real Paillier encryption, persist data, send email, or provide
-authentication. Never present it as a production voting system.
+None of this is a production voting system. Never present it as one.
 
 ## 2. Run the project
 
@@ -126,15 +130,37 @@ Use pull requests for review. Keep commits focused and do not commit:
 
 ## 6. Viva checklist
 
-- Start the app before the presentation.
-- Use a seeded demo election with non-sensitive sample data.
-- Show the encrypted ballot payload and explain that it is not readable as a
-  candidate choice.
-- Submit a ballot with a demo token.
-- Try an empty token and explain input validation.
-- Show the integrity screen and explain duplicate-token and tamper checks.
-- Explain that the present UI is a shell until the backend and cryptographic
-  service are connected.
+Before the presentation:
+
+- Build the C++ tools (`make`, `make tests`) and start the app and the API.
+- Use a demo election with non-sensitive sample data. Run `make election-reset`
+  first so that no old keys or votes are left over.
+
+Command-line demo, about five minutes:
+
+1. `./tests`: show that decryption undoes encryption and that multiplying two
+   ciphertexts decrypts to the sum of the plaintexts.
+2. `./admin-keygen` (for example 3 candidates, 5 voters) and `./admin-tokens`.
+3. `./cast-vote | tee -a votes.txt` a few times with different tokens. Point out
+   that two votes for the same candidate give completely different ciphertexts.
+4. `./tally-votes <votes.txt`: only the total is decrypted.
+5. Show the attacks being caught:
+   - vote again with a token that was already used ("already been used");
+   - vote with a made-up token ("never issued");
+   - change one character of a ballot in a copy of `votes.txt` ("checksum is
+     incorrect").
+
+Explain, and be ready for questions on:
+
+- why Paillier: additive homomorphism, so individual ballots are never decrypted;
+- the vote encoding `(voters + 1)^(candidate - 1)` and why `admin-keygen` checks
+  the key size;
+- the checks for multi-vote ballots and unknown candidates;
+- the known limitations in the README (homomorphic MAC forgery, colluding
+  voters, trusted administrator).
+
+Show the web parts too: `ui.html` for the in-browser flow, and the API if the UI
+is connected by then.
 
 ## 7. Team ownership suggestion
 
