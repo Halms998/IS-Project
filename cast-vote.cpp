@@ -2,7 +2,15 @@
 #include <iostream>
 #include <string>
 #include "CryptoCommon.h"
+#define EMAIL_TXT "email.txt"
+#define EMAIL_SUBJECT_PREFIX "Vote: "
 using namespace std;
+
+// Writes the encrypted ballot and its encrypted authenticity value between BEGIN/END markers.
+static void print_envelope(ostream& os, paillier_ciphertext_t* ctVote, paillier_ciphertext_t* ctAuthentic){
+	os << "---BEGIN:BALLOT---\n" << ciphertext_base64(ctVote) << "----END:BALLOT----\n";
+	os << "---BEGIN:MAC---\n" << ciphertext_base64(ctAuthentic) << "----END:MAC----" << endl;
+}
 
 int main(){
 	// char x[] = "Test";
@@ -19,8 +27,9 @@ int main(){
 	cout << "Welcome! ";
 	// Read the public key from a file.
 	int numCandidates, numVoters;
+	string electionName, electionEmailAddress;
 	paillier_pubkey_t* pub = NULL;
-	int pubkeyStatus = read_pubkey_from_file(numCandidates, numVoters, &pub);
+	int pubkeyStatus = read_pubkey_from_file(numCandidates, numVoters, &pub, electionName, electionEmailAddress);
 	if(pubkeyStatus == PUBKEY_NO_FILE){
 		cerr << "Error: could not read public key file.\n";
 		return 1;
@@ -85,7 +94,6 @@ int main(){
 	// cout << '\n' << endl;
 	// Encrypt the vote.
 	paillier_ciphertext_t* ctVote = paillier_enc(NULL, pub, ptVote, paillier_get_rand_devurandom);
-	cout << "---BEGIN:BALLOT---\n" << ciphertext_base64(ctVote) << "----END:BALLOT----" << endl;
 	// Get the SHA-256 sum of the ciphertext.
 	mpz_t checksum;
 	ciphertext_sha256(checksum, ctVote);
@@ -95,7 +103,27 @@ int main(){
 	mpz_add(ptAuthentic->m, ptAuthentic->m, checksum);
 	// Encrypt the authenticity value.
 	paillier_ciphertext_t* ctAuthentic = paillier_enc(NULL, pub, ptAuthentic, paillier_get_rand_devurandom);
-	cout << "---BEGIN:MAC---\n" << ciphertext_base64(ctAuthentic) << "----END:MAC----" << endl;
+	// Print the envelope. Other programs read these BEGIN/END blocks, so keep the format as is.
+	print_envelope(cout, ctVote, ctAuthentic);
+	// Also write the envelope into an e-mail that can be sent with ssmtp.
+	ofstream ofsEmail(EMAIL_TXT);
+	if(ofsEmail){
+		if(!electionEmailAddress.empty()){
+			ofsEmail << "To: " << electionEmailAddress << '\n';
+		}
+		ofsEmail << "Subject: " << EMAIL_SUBJECT_PREFIX << electionName << "\n\n";
+		print_envelope(ofsEmail, ctVote, ctAuthentic);
+		ofsEmail.close();
+		cout << "\nYour vote was encrypted and saved to " << EMAIL_TXT << ".\n";
+		if(!electionEmailAddress.empty()){
+			cout << "To send it, run:\n    ssmtp " << electionEmailAddress << " <" << EMAIL_TXT << endl;
+		}else{
+			cout << "Send that file to your election authority by e-mail." << endl;
+		}
+	}else{
+		cerr << "Warning: " << EMAIL_TXT << " could not be created. Send the BALLOT and MAC blocks above"
+			<< " by e-mail with the subject \"" << EMAIL_SUBJECT_PREFIX << electionName << "\".\n";
+	}
 	// Clean up.
 	// TODO: also clean up when something fails above
 	mpz_clear(zVoterToken);
