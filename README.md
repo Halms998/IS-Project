@@ -72,34 +72,50 @@ implementation. They need GMP, Crypto++ and
 
 | Tool | Purpose | Status |
 | --- | --- | --- |
-| `admin-keygen` | Create the election and Paillier key pair | Done |
+| `admin-keygen` | Create the election (name, vote e-mail address) and Paillier key pair; refuses elections too large for the key | Done |
 | `admin-tokens` | Generate one unique voter token per voter into `tokens.txt` | Done |
-| `cast-vote` | Encrypt a ballot and produce its authenticity code (MAC) | Done |
+| `cast-vote` | Encrypt a ballot and produce its authenticity code (MAC); also writes `email.txt` for `ssmtp` | Done |
+| `imap-get-votes.py` | Download votes from an IMAP mailbox (subject `Vote: <election name>`, multipart supported) into `votes-downloaded.txt` | Done |
 | `tally-votes` | Verify MACs, skip duplicate tokens, tally homomorphically, run integrity checks | Done |
 | `tests` | Check key generation, encryption, decryption and homomorphic addition | Done |
+| `make election-reset` | Delete the current election's keys, tokens and votes (asks first) | Done |
 
 ## Work in progress
 
 | Area | Owner | Status |
 | --- | --- | --- |
-| C++ crypto core (`admin-keygen`, `cast-vote`, Paillier tests) | noor486 | Done |
+| C++ crypto core (`admin-keygen`, `cast-vote`, Paillier tests, `CryptoCommon`) | noor486 | Done |
+| Key-size check, election name and e-mail, `email.txt`, `imap-get-votes.py`, Makefile cleanup, `election-reset` | noor486 | Done, merged to `main` |
+| Integrity and confidentiality documentation (below) | noor486 | Done |
 | `admin-tokens`, `tally-votes`, ciphertext and vote-radix fixes | Esar Fatima | Done, merged to `main` |
-| Backend API (`server/`) | Esar Fatima | On branch `feature/backend-api`, pull request open; end-to-end run with the compiled C++ tools being verified |
+| Backend API (`server/`) with ballot validation | Esar Fatima | Merged to `main` (pull request #3); end-to-end run with the compiled C++ tools being verified |
+| Interactive in-browser Paillier UI (`ui.html`, see [README-UI](./README-UI.md)) | Haleemah Zaheer | Done, merged to `main` |
 | Connect the React UI to the API (replace seeded data in `src/App.tsx`) | Esar Fatima | Next |
-| Viva script, threat model, test evidence | To be assigned | Not started |
+| Viva script, test evidence | To be assigned | Not started |
 
 Build and try it:
 
 ```bash
-make            # on Windows (MSYS2 UCRT64): mingw32-make
+make                            # on Windows (MSYS2 UCRT64): mingw32-make
 make tests && ./tests
-./admin-keygen  # asks for the numbers of candidates and voters
-./admin-tokens  # writes tokens.txt (never overwrites an existing file)
-./cast-vote     # enter a token from tokens.txt and pick a candidate
+./admin-keygen                  # numbers of candidates and voters, then election name and e-mail
+./admin-tokens                  # writes tokens.txt (never overwrites an existing file)
+./cast-vote | tee -a votes.txt  # enter a token from tokens.txt and pick a candidate
+./tally-votes <votes.txt        # verify every envelope and print the results
+make election-reset             # start over (deletes keys, tokens and votes)
 ```
 
-`public-key.txt`, `private-key.txt`, `tokens.txt` and `votes-downloaded.txt` are
-election secrets or data and are ignored by Git. Never commit them.
+To collect votes by e-mail instead, voters send `email.txt` (for example with
+`ssmtp <address> <email.txt`) and the administrator downloads them:
+
+```bash
+python3 imap-get-votes.py imap.gmail.com admin@gmail.com   # asks for the (app) password
+./tally-votes <votes-downloaded.txt
+```
+
+`public-key.txt`, `private-key.txt`, `tokens.txt`, `email.txt`, `votes.txt` and
+`votes-downloaded.txt` are election secrets or data and are ignored by Git.
+Never commit them.
 
 ### Building on Windows (MSYS2 UCRT64)
 
@@ -220,6 +236,23 @@ an audit log, and runs the C++ tools above for all cryptography. See
   ballot storage, an audit log, explicit rejection of unknown, reused and malformed ballots,
   admin-key protected routes, and a runner that calls the C++ tools, with automated tests.
 - Updated this README.
+
+### noor486
+
+- Rebuilt the C++ core step by step from the reference: `paillier.h`, the
+  `Makefile`, and `tests` for key generation, encryption, decryption and
+  homomorphic addition.
+- Added the shared **`CryptoCommon`** module (base 64, SHA-256, token
+  sanitizing, and one public key file reader used by every tool).
+- Added **`admin-keygen`** with a check that `(voters + 1)^candidates` fits
+  under the public key, and the election name and vote e-mail address.
+- Added **`cast-vote`**, including writing `email.txt` for `ssmtp`.
+- Added **`imap-get-votes.py`** to download votes from a mailbox, with
+  multipart e-mail support.
+- Cleaned up the `Makefile` (libraries only when linking, optimization,
+  `make clean`, `make election-reset`).
+- Wrote the election integrity and confidentiality section, including the
+  known limitations.
 
 See `git log` for the full history of every contributor.
 
