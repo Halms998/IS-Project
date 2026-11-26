@@ -205,6 +205,13 @@ export class ElectionService {
   // Verifies every stored envelope, decrypts only the combined total, and closes voting.
   async tally(electionId: number): Promise<TallyReport> {
     const election = this.requireElection(electionId);
+    if (election.status === 'tallied') {
+      throw new ApiError(
+        409,
+        'ELECTION_ALREADY_TALLIED',
+        'This election has already been tallied.',
+      );
+    }
     const envelopes: Envelope[] = this.listBallots(electionId).map((b) => ({ ballot: b.ballot, mac: b.mac }));
     let result: TallyResult;
     try {
